@@ -17,12 +17,28 @@ target_include_directories(dyna_bitset INTERFACE
     ${CMAKE_SOURCE_DIR}/include
 )
 
+# Find Google Benchmark
+find_package(benchmark REQUIRED)
+
 # target_link_libraries(dyna_bitset INTERFACE
 # )
 
-# === Test Executable ===
-add_executable(test
-    src/test.cpp
+# === Main Executable ===
+add_executable(main
+    src/main.cpp
 )
 
-target_link_libraries(test PRIVATE dyna_bitset)
+target_link_libraries(main PRIVATE dyna_bitset benchmark::benchmark)
+
+# === Test Executables ===
+add_executable(shift_comp
+    test/shift_comp.cpp
+)
+
+target_link_libraries(shift_comp PRIVATE dyna_bitset benchmark::benchmark)
+
+add_executable(bitwise_comp
+    test/bitwise_comp.cpp
+)
+
+target_link_libraries(bitwise_comp PRIVATE dyna_bitset benchmark::benchmark)
