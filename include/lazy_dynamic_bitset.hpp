@@ -234,7 +234,6 @@ namespace dybi
             return !(*this == other);
         }
 
-
         // more bitwise
 
         lazy_dynamic_bitset operator & (const lazy_dynamic_bitset &other)
