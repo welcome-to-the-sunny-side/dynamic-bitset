@@ -13,6 +13,46 @@ namespace dybi
     {
         public:
 
+        class bit_reference 
+        {
+            dynamic_bitset& bitset_ref;
+            int pos;
+
+        public:
+            bit_reference(dynamic_bitset& ref, int p) : bitset_ref(ref), pos(p) {}
+
+            // Assignment operator for writing (e.g., bitset[i] = true)
+            bit_reference &operator=(bool val)
+            {
+                bitset_ref.set(pos, val);
+                return *this;
+            }
+
+            // Assignment operator for copying from another reference (e.g., bitset[i] = bitset[j])
+            bit_reference &operator=(const bit_reference &other)
+            {
+                bitset_ref.set(pos, static_cast<bool>(other));
+                return *this;
+            }
+
+            // Conversion operator for reading (e.g., if (bitset[i]))
+            operator bool() const
+            {
+                return bitset_ref.get(pos);
+            }
+
+            bit_reference &flip()
+            {
+                bitset_ref.set(pos, !bitset_ref.get(pos));
+                return *this;
+            }
+
+            bool operator~() const
+            {
+                return !bitset_ref.get(pos);
+            }
+        };
+
         static_assert(sizeof(T) * 8 == B, "check block width");
         static_assert(std::is_same<T, uint64_t>::value, "modify popcnt(), ctz(), clz()");
 
@@ -89,6 +129,21 @@ namespace dybi
         {
             assert(0 <= i and i < n);
             return (b[i/B] & (T(1) << (i % B))) != 0;
+        }
+
+        // subscript operators
+        // non-const version: returns a modifiable reference proxy
+        bit_reference operator[](int i)
+        {
+            assert(0 <= i and i < n);
+            return bit_reference(*this, i);
+        }
+
+        // const version: returns the actual bool value (read-only)
+        bool operator[](int i) const
+        {
+            assert(0 <= i and i < n);
+            return get(i); // directly call get for const access
         }
 
         // reset the bitset

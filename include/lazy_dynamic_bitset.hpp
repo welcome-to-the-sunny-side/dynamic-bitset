@@ -12,6 +12,56 @@ namespace dybi
     {
         public:
 
+        class bit_reference
+        {
+            lazy_dynamic_bitset &bitset_ref;
+            int pos;
+
+        public:
+            bit_reference(lazy_dynamic_bitset &ref, int p) : bitset_ref(ref), pos(p) {}
+
+            // Assignment operator for writing (e.g., bitset[i] = true)
+            bit_reference &operator=(bool val)
+            {
+                bitset_ref.resolve_shift(); // Resolve before modifying
+                bitset_ref.set(pos, val);
+                return *this;
+            }
+
+            // Assignment operator for copying from another reference (e.g., bitset[i] = bitset[j])
+            bit_reference &operator=(const bit_reference &other)
+            {
+                // Need to resolve both if the other one could be lazy too,
+                // but 'other' is const, so we cast away constness only to call resolve_shift.
+                // It's generally safe as resolve_shift only modifies mutable members.
+                const_cast<lazy_dynamic_bitset &>(other.bitset_ref).resolve_shift();
+                bitset_ref.resolve_shift();
+                bitset_ref.set(pos, static_cast<bool>(other)); // Reading other calls its operator bool()
+                return *this;
+            }
+
+            // Conversion operator for reading (e.g., if (bitset[i]))
+            operator bool() const
+            {
+                const_cast<lazy_dynamic_bitset &>(bitset_ref).resolve_shift(); // Resolve before reading
+                return bitset_ref.get(pos);
+            }
+
+            // Flip the bit (e.g., bitset[i].flip())
+            bit_reference &flip()
+            {
+                bitset_ref.resolve_shift(); // Resolve before modifying
+                bitset_ref.set(pos, !bitset_ref.get(pos));
+                return *this;
+            }
+
+            bool operator~() const
+            {
+                const_cast<lazy_dynamic_bitset &>(bitset_ref).resolve_shift(); // Resolve before reading
+                return !bitset_ref.get(pos);
+            }
+        };
+
         static_assert(sizeof(T) * 8 == B, "check block width");
         static_assert(std::is_same<T, uint64_t>::value, "modify popcnt(), ctz(), clz()");
 
@@ -451,8 +501,27 @@ namespace dybi
             return pos;
         }
 
+        // Non-const version: returns a modifiable reference proxy
+        bit_reference operator[](int i)
+        {
+            assert(0 <= i and i < n);
+            // Don't resolve shift here, the reference object will do it on access/modification
+            return bit_reference(*this, i);
+        }
+
+        // Const version: returns the actual bool value (read-only)
+        bool operator[](int i) const
+        {
+            assert(0 <= i and i < n);
+            resolve_shift(); // Resolve shift before getting
+            return get(i);   // Directly call get for const access
+        }
+
         friend std::ostream &operator<<(std::ostream &os, const lazy_dynamic_bitset &bitset)
         {
+            // No need to resolve shift explicitly here, operator[] const will do it if needed
+            // or the internal get used by the reference proxy will handle it.
+            // However, printing the whole bitset requires resolving.
             bitset.resolve_shift();
             for (int i = bitset.m - 1; i >= 0; --i)
                 os << std::bitset<B>(bitset.b[i]);

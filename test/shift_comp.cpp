@@ -13,7 +13,7 @@ int rng(int n = 1000000007)
     return std::uniform_int_distribution<int>(0, n - 1)(mt);
 }
 
-const int S = 100;
+const int S = 1000;
 const int T = 10;
 
 int main()
@@ -21,7 +21,7 @@ int main()
     // int n, q;
     // std::cin >> n >> q;
 
-    constexpr int n = 100000, q = 10000;
+    constexpr int n = 100000, q = 100000;
 
     std::vector<bool> v(n);
     std::vector<std::pair<int, int>> op(q);
@@ -59,7 +59,7 @@ int main()
             auto end = std::chrono::high_resolution_clock::now();
             total_a_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             a_tries ++;
-            f += a.get(idx);
+            f += a[idx];
         }
         {
             for(int i = 0; i < n; i ++)
@@ -76,7 +76,7 @@ int main()
             auto end = std::chrono::high_resolution_clock::now();
             total_b_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             b_tries ++;
-            f += b.get(idx);
+            f += b[idx];
         }
         {
             for(int i = 0; i < n; i ++)
@@ -96,8 +96,10 @@ int main()
             f += c[idx];
         }
     }
+
+    assert(f != -1);
     
-    std::cout << "average shift time for regular: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
-    std::cout << "average shift time for lazy: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
-    std::cout << "average shift time for stl: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;
+    std::cout << "average shift update time for regular dbitset: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
+    std::cout << "average shift update time for lazy dbitset: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
+    std::cout << "average shift update time for stl bitset: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;
 }

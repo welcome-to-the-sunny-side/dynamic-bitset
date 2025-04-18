@@ -23,7 +23,7 @@ int main()
     // int n, q;
     // std::cin >> n >> q;
 
-    const int n = 100000, q = 10000;
+    const int n = 100000, q = 100000;
     
     std::vector<dbitset> as (P, dbitset(n));
     std::vector<ldbitset> bs (P, ldbitset(n));
@@ -84,7 +84,7 @@ int main()
             auto end = std::chrono::high_resolution_clock::now();
             total_a_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             a_tries ++;
-            f += a.get(idx);
+            f += a[idx];
         }
         {
             for(int i = 0; i < n; i ++)
@@ -107,7 +107,7 @@ int main()
             auto end = std::chrono::high_resolution_clock::now();
             total_b_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             b_tries ++;
-            f += b.get(idx);
+            f += b[idx];
         }
         {
             for(int i = 0; i < n; i ++)
@@ -133,9 +133,10 @@ int main()
             f += c[idx];
         }
     }
-    
-    std::cout << "f: " << f << std::endl;
-    std::cout << "average update time for regular: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
-    std::cout << "average update time for lazy: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
-    std::cout << "average update time for stl: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;
+
+    assert(f != -1);
+
+    std::cout << "average mixed update time for regular dbitset: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
+    std::cout << "average mixed update time for lazy dbitset: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
+    std::cout << "average mixed update time for stl bitset: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;
 }

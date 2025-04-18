@@ -3,6 +3,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 cmake_minimum_required(VERSION 3.10)
 project(DBITSET)
 
+message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "Using CXX compiler: ${CMAKE_CXX_COMPILER}")
+
 set(CMAKE_CXX_STANDARD 17)
 
 add_compile_options(-O3 -march=native -funroll-loops)
