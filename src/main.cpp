@@ -1,10 +1,7 @@
-// #pragma GCC optimize("O3,unroll-loops")
-// if available, enable AVX2
-// #pragma GCC target("avx2")
-
 #include <iostream>
 #include <random>
 #include "dynamic_bitset.hpp"
+#include "lazy_dynamic_bitset.hpp"
 
 using dbitset = dybi::dynamic_bitset<uint64_t, 64>;
 
@@ -25,9 +22,14 @@ int main()
     {
         int x;
         std::cin >> x;
-        a.set(i, x);
+        a[i] = x;
     }
-
+    
+    for(int i = 0; i < n; i ++)
+    {
+        std::cout << a[i] << " ";
+    }
+    std::cout << std::endl;
     for(int ts = 0; ts < q; ts ++)
     {
         int t;
@@ -36,13 +38,13 @@ int main()
         {
             int i, x;
             std::cin >> i >> x;
-            a.set(i, x);
+            a[i] = x;
         }
         else if(t == 2)
         {
             int i;
             std::cin >> i;
-            std::cout << a.get(i) << std::endl;
+            std::cout << a[i] << std::endl;
         }
         else if(t == 3)
         {
