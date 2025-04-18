@@ -104,6 +104,7 @@ namespace dybi
 
         void operator &= (const dynamic_bitset &other)
         {
+            #pragma ivdep
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] &= other.b[i];
             if(m > other.m)
@@ -113,6 +114,7 @@ namespace dybi
 
         void operator |= (const dynamic_bitset &other)
         {
+            #pragma ivdep
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] |= other.b[i];
             trim(); // this might result in some overhanging bits being switched on
@@ -120,6 +122,7 @@ namespace dybi
     
         void operator ^= (const dynamic_bitset &other)
         {
+            #pragma ivdep
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] ^= other.b[i];
             trim(); // this might result in some overhanging bits being switched on

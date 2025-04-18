@@ -6,6 +6,7 @@
 
 namespace dybi
 {
+    constexpr int L_AVCT = 16;
     template<typename T, const int B>
     class lazy_dynamic_bitset
     {
@@ -154,12 +155,14 @@ namespace dybi
     
             if(d > 0)
             {
+                #pragma ivdep
                 for(int i = m - 1 - s; i > 0; i --)
                     b[i + s] = (b[i] << d) | (b[i - 1] >> r);
                 b[s] = b[0] << d;
             }
             else
             {
+                #pragma ivdep
                 for(int i = m - 1 - s; i > 0; i --)
                     b[i + s] = b[i];
                 b[s] = b[0];
@@ -183,13 +186,17 @@ namespace dybi
     
             if(d > 0)
             {
+                #pragma ivdep
                 for(int i = s; i < m - 1; i ++)
                     b[i - s] = (b[i] >> d) | (b[i + 1] << l); 
                 b[m - 1 - s] = b[m - 1] >> d;
             }
             else
+            {
+                #pragma ivdep
                 for(int i = s; i < m; i ++)
                     b[i - s] = b[i];
+            }
     
             std::fill(b.begin() + m - s, b.end(), T(0));        
     
