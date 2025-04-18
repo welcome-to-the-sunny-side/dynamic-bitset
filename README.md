@@ -42,7 +42,7 @@ Note: Enabling O3 and loop unrolling makes all operations about twice as fast, s
 ![visual](misc/graph.png)
 
 Some information about this admittedly poor benchmark:
-- The size of the bitset across all operations was $10^5$.
+- The size of the bitset was $10^5$ across all operations.
 - The code used to benchmark can be found in the "test" directory.
 - The compiler used was GCC 14, with the flags `-O3 -march=native -funroll-loops`.
 - The device used was a M3 Mac.
