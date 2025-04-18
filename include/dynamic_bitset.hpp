@@ -6,6 +6,9 @@
 
 namespace dybi
 {
+    #define AVCT 16
+    #define SIMD_EXPLICIT 0
+
     template<typename T, const int B>
     class dynamic_bitset
     {
@@ -100,28 +103,116 @@ namespace dybi
         // note : if the other bitset is smaller - it is padded with zeros
         // if the other bitset is larger - the overhanging suffix is ignored
 
+        #if defined(SIMD_EXPLICIT) && defined(__AVX2__)
         void operator &= (const dynamic_bitset &other)
         {
+            constexpr int VEC_SIZE = sizeof(__m256i) / sizeof(T); // Number of T elements in a 256-bit vector
+            const int limit = std::min(m, other.m);
+            const int vec_end = limit - (limit % VEC_SIZE);
+
+            // Process full 256-bit chunks using AVX2
+            for (int i = 0; i < vec_end; i += VEC_SIZE) 
+            {
+                // Load 256 bits (4 x uint64_t) from both bitsets
+                __m256i vec_a = _mm256_loadu_si256((__m256i*)&b[i]);
+                __m256i vec_b = _mm256_loadu_si256((__m256i*)&other.b[i]);
+
+                // Perform AND
+                __m256i result_vec = _mm256_and_si256(vec_a, vec_b);
+
+                // Store the result back
+                _mm256_storeu_si256((__m256i*)&b[i], result_vec);
+            }
+
+            // Process any remaining elements scalar way
+            for (int i = vec_end; i < limit; ++i) 
+                b[i] &= other.b[i];
+
+            trim(); // this might result in some overhanging bits being switched on
+        }
+        #else 
+        void operator &= (const dynamic_bitset &other)
+        {
+            // #pragma GCC unroll AVCT
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] &= other.b[i];
-            if(m > other.m)
-                std::fill(b.begin() + other.m, b.begin() + m, T(0));
-            // trim(); there's no need to trim here, as no extra bits are switched on in our own overhang
+            trim(); // this might result in some overhanging bits being switched on
         }
+        #endif
 
+        #if defined(SIMD_EXPLICIT) && defined(__AVX2__)
         void operator |= (const dynamic_bitset &other)
         {
+            constexpr int VEC_SIZE = sizeof(__m256i) / sizeof(T); // Number of T elements in a 256-bit vector
+            const int limit = std::min(m, other.m);
+            const int vec_end = limit - (limit % VEC_SIZE);
+
+            // Process full 256-bit chunks using AVX2
+            for (int i = 0; i < vec_end; i += VEC_SIZE) 
+            {
+                // Load 256 bits (4 x uint64_t) from both bitsets
+                __m256i vec_a = _mm256_loadu_si256((__m256i*)&b[i]);
+                __m256i vec_b = _mm256_loadu_si256((__m256i*)&other.b[i]);
+
+                // Perform OR
+                __m256i result_vec = _mm256_or_si256(vec_a, vec_b);
+
+                // Store the result back
+                _mm256_storeu_si256((__m256i*)&b[i], result_vec);
+            }
+
+            // Process any remaining elements scalar way
+            for (int i = vec_end; i < limit; ++i) 
+                b[i] |= other.b[i];
+
+            trim(); // this might result in some overhanging bits being switched on
+        }
+        #else 
+        void operator |= (const dynamic_bitset &other)
+        {
+            // #pragma GCC unroll AVCT
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] |= other.b[i];
             trim(); // this might result in some overhanging bits being switched on
         }
-    
+        #endif
+
+        #if defined(SIMD_EXPLICIT) && defined(__AVX2__)
         void operator ^= (const dynamic_bitset &other)
         {
+            constexpr int VEC_SIZE = sizeof(__m256i) / sizeof(T); // Number of T elements in a 256-bit vector
+            const int limit = std::min(m, other.m);
+            const int vec_end = limit - (limit % VEC_SIZE);
+
+            // Process full 256-bit chunks using AVX2
+            for (int i = 0; i < vec_end; i += VEC_SIZE) 
+            {
+                // Load 256 bits (4 x uint64_t) from both bitsets
+                __m256i vec_a = _mm256_loadu_si256((__m256i*)&b[i]);
+                __m256i vec_b = _mm256_loadu_si256((__m256i*)&other.b[i]);
+
+                // Perform XOR
+                __m256i result_vec = _mm256_xor_si256(vec_a, vec_b);
+
+                // Store the result back
+                _mm256_storeu_si256((__m256i*)&b[i], result_vec);
+            }
+
+            // Process any remaining elements scalar way
+            for (int i = vec_end; i < limit; ++i) 
+                b[i] ^= other.b[i];
+
+            trim(); // this might result in some overhanging bits being switched on
+        }
+        #else 
+        void operator ^= (const dynamic_bitset &other)
+        {
+            // #pragma GCC unroll AVCT
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] ^= other.b[i];
             trim(); // this might result in some overhanging bits being switched on
         }
+        #endif
 
         // shift left by x bits
         void operator <<= (int x)
@@ -139,17 +230,19 @@ namespace dybi
     
             if(d > 0)
             {
+                // #pragma GCC unroll AVCT
                 for(int i = m - 1 - s; i > 0; i --)
                     b[i + s] = (b[i] << d) | (b[i - 1] >> r);
                 b[s] = b[0] << d;
             }
             else
             {
+                #pragma GCC unroll AVCT
                 for(int i = m - 1 - s; i > 0; i --)
                     b[i + s] = b[i];
                 b[s] = b[0];
             }
-    
+
             std::fill(b.begin(), b.begin() + s, T(0));
     
             trim();
@@ -171,13 +264,17 @@ namespace dybi
     
             if(d > 0)
             {
+                // #pragma GCC unroll AVCT
                 for(int i = s; i < m - 1; i ++)
                     b[i - s] = (b[i] >> d) | (b[i + 1] << l); 
                 b[m - 1 - s] = b[m - 1] >> d;
             }
             else
+            {
+                // #pragma GCC unroll AVCT
                 for(int i = s; i < m; i ++)
                     b[i - s] = b[i];
+            }
     
             std::fill(b.begin() + m - s, b.end(), T(0));        
     

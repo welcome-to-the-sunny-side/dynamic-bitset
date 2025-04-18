@@ -195,6 +195,8 @@ namespace dybi
 
         inline void resolve_shift() const noexcept
         {
+            if(pending_shift == 0)
+                return;
             auto self = const_cast<lazy_dynamic_bitset*>(this);   // safe: we only
             if(pending_shift > 0)
                 self->left_shift(pending_shift);

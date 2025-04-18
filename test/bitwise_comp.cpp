@@ -70,7 +70,7 @@ int main()
                     a &= (as[op[i].second] | as[op[i].second]);
                 else if(op[i].first == 1)
                     a |= (as[op[i].second] ^ as[op[i].second]);
-                else if(op[i].second == 2)
+                else if(op[i].first == 2)
                     a ^= (as[op[i].second] & as[op[i].second]);
             }
             auto end = std::chrono::high_resolution_clock::now();
