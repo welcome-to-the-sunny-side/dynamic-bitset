@@ -1,8 +1,7 @@
-#pragma GCC optimize("O3,unroll-loops")
-#pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
-
 #include <iostream>
 #include <random>
+#include <chrono>
+#include <fstream>
 #include "dynamic_bitset.hpp"
 #include "lazy_dynamic_bitset.hpp"
 
@@ -15,15 +14,16 @@ int rng(int n = 1000000007)
     return std::uniform_int_distribution<int>(0, n - 1)(mt);
 }
 
+
 const int P = 100;
-const int T = 5;
+const int T = 10;
 
 int main()
 {
     // int n, q;
     // std::cin >> n >> q;
 
-    const int n = 10000, q = 10000;
+    const int n = 100000, q = 10000;
     
     std::vector<dbitset> as (P, dbitset(n));
     std::vector<ldbitset> bs (P, ldbitset(n));
@@ -47,7 +47,7 @@ int main()
         v[i] = rng(2);
     
     for(int i = 0; i < q; i ++)
-        op[i] = {rng(3), rng(P)};
+        op[i] = {rng(3), rng(P - 1)};
 
     int64_t total_a_time = 0, total_b_time = 0, total_c_time = 0;
     int64_t a_tries = 0, b_tries = 0, c_tries = 0;
@@ -56,9 +56,13 @@ int main()
     ldbitset b(n);
     std::bitset<n> c;
 
-    for(int t = 0; t < 3 * T; t ++)
+    int store_value = 0;
+
+    int f = 0;
+
+    for(int t = 0; t < T; t ++)
     {
-        if(t % 3 == 0)
+        int idx = rng(n);
         {
             for(int i = 0; i < n; i ++)
                 a.set(i, v[i]);
@@ -66,18 +70,18 @@ int main()
             auto start = std::chrono::high_resolution_clock::now();
             for(int i = 0; i < q; i ++)
             {
-                if(op[i].first == 0)
-                    a &= (as[op[i].second] | as[op[i].second]);
+                if(op[i].first == 0)    
+                    a &= as[op[i].second];
                 else if(op[i].first == 1)
-                    a |= (as[op[i].second] ^ as[op[i].second]);
+                    a |= as[op[i].second];
                 else if(op[i].first == 2)
-                    a ^= (as[op[i].second] & as[op[i].second]);
+                    a ^= as[op[i].second];
             }
             auto end = std::chrono::high_resolution_clock::now();
             total_a_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             a_tries ++;
+            f += a.get(idx);
         }
-        else if(t % 3 == 1)
         {
             for(int i = 0; i < n; i ++)
                 b.set(i, v[i]);
@@ -86,17 +90,17 @@ int main()
             for(int i = 0; i < q; i ++)
             {
                 if(op[i].first == 0)
-                    b &= (bs[op[i].second] | bs[op[i].second]);
+                    b &= bs[op[i].second];
                 else if(op[i].first == 1)
-                    b |= (bs[op[i].second] ^ bs[op[i].second]);
+                    b |= bs[op[i].second];
                 else if(op[i].first == 2)
-                    b ^= (bs[op[i].second] & bs[op[i].second]);
+                    b ^= bs[op[i].second];
             }
             auto end = std::chrono::high_resolution_clock::now();
             total_b_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             b_tries ++;
+            f += b.get(idx);
         }
-        else
         {
             for(int i = 0; i < n; i ++)
                 c[i] = v[i];
@@ -105,18 +109,20 @@ int main()
             for(int i = 0; i < q; i ++)
             {
                 if(op[i].first == 0)
-                    c &= (cs[op[i].second] | cs[op[i].second]);
+                    c &= cs[op[i].second];
                 else if(op[i].first == 1)
-                    c |= (cs[op[i].second] ^ cs[op[i].second]);
+                    c |= cs[op[i].second];
                 else if(op[i].first == 2)
-                    c ^= (cs[op[i].second] & cs[op[i].second]);
+                    c ^= cs[op[i].second];
             }
             auto end = std::chrono::high_resolution_clock::now();
             total_c_time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             c_tries ++;
+            f += c[idx];
         }
     }
     
+    std::cout << "f: " << f << std::endl;
     std::cout << "average update time for regular: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
     std::cout << "average update time for lazy: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
     std::cout << "average update time for stl: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;

@@ -5,6 +5,14 @@ project(DBITSET)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_compile_options(-O3 -march=native -funroll-loops)
+
+# if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#     add_compile_options(-fopt-info-vec-all)
+# elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#     add_compile_options(-Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize)
+# endif()
+
 # Include project headers
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -42,3 +50,9 @@ add_executable(bitwise_comp
 )
 
 target_link_libraries(bitwise_comp PRIVATE dyna_bitset benchmark::benchmark)
+
+add_executable(mixed_comp
+    test/mixed_comp.cpp
+)
+
+target_link_libraries(mixed_comp PRIVATE dyna_bitset benchmark::benchmark)

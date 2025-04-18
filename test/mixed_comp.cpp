@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <fstream>
 #include "dynamic_bitset.hpp"
 #include "lazy_dynamic_bitset.hpp"
 
@@ -14,6 +15,7 @@ int rng(int n = 1000000007)
 }
 
 const int S = 100;
+const int P = 100;
 const int T = 10;
 
 int main()
@@ -21,7 +23,22 @@ int main()
     // int n, q;
     // std::cin >> n >> q;
 
-    constexpr int n = 100000, q = 10000;
+    const int n = 100000, q = 10000;
+    
+    std::vector<dbitset> as (P, dbitset(n));
+    std::vector<ldbitset> bs (P, ldbitset(n));
+    std::vector<std::bitset<n>> cs (P);
+
+    for(int i = 0; i < P; i ++)
+    {
+        for(int j = 0; j < n; j ++)
+        {
+            int x = rng(2);
+            as[i].set(j, x);
+            bs[i].set(j, x);
+            cs[i].set(j, x);
+        }
+    }
 
     std::vector<bool> v(n);
     std::vector<std::pair<int, int>> op(q);
@@ -30,7 +47,7 @@ int main()
         v[i] = rng(2);
     
     for(int i = 0; i < q; i ++)
-        op[i] = {rng(2), rng(S)};
+        op[i] = {rng(7), rng(P - 1)};
 
     int64_t total_a_time = 0, total_b_time = 0, total_c_time = 0;
     int64_t a_tries = 0, b_tries = 0, c_tries = 0;
@@ -38,6 +55,8 @@ int main()
     dbitset a(n);
     ldbitset b(n);
     std::bitset<n> c;
+
+    int store_value = 0;
 
     int f = 0;
 
@@ -51,9 +70,15 @@ int main()
             auto start = std::chrono::high_resolution_clock::now();
             for(int i = 0; i < q; i ++)
             {
-                if(op[i].first)
+                if(op[i].first == 0)    
+                    a &= as[op[i].second];
+                else if(op[i].first == 1)
+                    a |= as[op[i].second];
+                else if(op[i].first == 2)
+                    a ^= as[op[i].second];
+                else if(op[i].first <= 4)
                     a <<= op[i].second;
-                else
+                else 
                     a >>= op[i].second;
             }
             auto end = std::chrono::high_resolution_clock::now();
@@ -68,9 +93,15 @@ int main()
             auto start = std::chrono::high_resolution_clock::now();
             for(int i = 0; i < q; i ++)
             {
-                if(op[i].first)
+                if(op[i].first == 0)
+                    b &= bs[op[i].second];
+                else if(op[i].first == 1)
+                    b |= bs[op[i].second];
+                else if(op[i].first == 2)
+                    b ^= bs[op[i].second];
+                else if(op[i].first <= 4)
                     b <<= op[i].second;
-                else
+                else 
                     b >>= op[i].second;
             }
             auto end = std::chrono::high_resolution_clock::now();
@@ -85,9 +116,15 @@ int main()
             auto start = std::chrono::high_resolution_clock::now();
             for(int i = 0; i < q; i ++)
             {
-                if(op[i].first)
+                if(op[i].first == 0)
+                    c &= cs[op[i].second];
+                else if(op[i].first == 1)
+                    c |= cs[op[i].second];
+                else if(op[i].first == 2)
+                    c ^= cs[op[i].second];
+                else if(op[i].first <= 4)
                     c <<= op[i].second;
-                else
+                else 
                     c >>= op[i].second;
             }
             auto end = std::chrono::high_resolution_clock::now();
@@ -97,7 +134,8 @@ int main()
         }
     }
     
-    std::cout << "average shift time for regular: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
-    std::cout << "average shift time for lazy: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
-    std::cout << "average shift time for stl: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;
+    std::cout << "f: " << f << std::endl;
+    std::cout << "average update time for regular: " << (long double)total_a_time / (long double)(a_tries * q) << " ns" << std::endl;
+    std::cout << "average update time for lazy: " << (long double)total_b_time / (long double)(b_tries * q) << " ns" << std::endl;
+    std::cout << "average update time for stl: " << (long double)total_c_time / (long double)(c_tries * q) << " ns" << std::endl;
 }

@@ -108,6 +108,7 @@ namespace dybi
             resolve_shift();
             other.resolve_shift();
 
+            #pragma ivdep
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] &= other.b[i];
             if(m > other.m)
@@ -120,6 +121,7 @@ namespace dybi
             resolve_shift();
             other.resolve_shift();
 
+            #pragma ivdep
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] |= other.b[i];
             trim(); // this might result in some overhanging bits being switched on
@@ -130,6 +132,7 @@ namespace dybi
             resolve_shift();
             other.resolve_shift();
 
+            #pragma ivdep
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] ^= other.b[i];
             trim(); // this might result in some overhanging bits being switched on
