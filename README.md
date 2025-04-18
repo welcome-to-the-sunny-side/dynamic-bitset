@@ -1,5 +1,5 @@
 
-# Dynamic Bitset Implementation
+# Dynamic Bitsets!
 
 This library provides two bitset implementations (`dybi::dynamic_bitset` and `dybi::lazy_dynamic_bitset`) that offer the following benefits over `std::bitset`:
 
