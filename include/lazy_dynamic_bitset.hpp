@@ -7,10 +7,10 @@
 namespace dybi
 {
     constexpr int L_AVCT = 16;
-    template<typename T, const int B>
     class lazy_dynamic_bitset
     {
         public:
+        static constexpr int B = 64;
 
         class bit_reference
         {
@@ -62,35 +62,35 @@ namespace dybi
             }
         };
 
-        static_assert(sizeof(T) * 8 == B, "check block width");
-        static_assert(std::is_same<T, uint64_t>::value, "modify popcnt(), ctz(), clz()");
+        static_assert(sizeof(uint64_t) * 8 == B, "check block width");
+        static_assert(std::is_same<uint64_t, uint64_t>::value, "modify popcnt(), ctz(), clz()");
 
-        static inline constexpr bool on(int i, T x) noexcept
+        static inline constexpr bool on(int i, uint64_t x) noexcept
         {
-            return ((T(1) << i) & x) != 0;
+            return ((uint64_t(1) << i) & x) != 0;
         }
-        static inline constexpr T prefix(int i) noexcept
+        static inline constexpr uint64_t prefix(int i) noexcept
         {
-            return (i >= B) ? ~T(0) : ((T(1) << i) - T(1));
+            return (i >= B) ? ~uint64_t(0) : ((uint64_t(1) << i) - uint64_t(1));
         }
-        static inline constexpr T suffix(int i) noexcept
+        static inline constexpr uint64_t suffix(int i) noexcept
         {
             return ~prefix(B - i);
         }
-        static inline constexpr T range(int l, int r) noexcept
+        static inline constexpr uint64_t range(int l, int r) noexcept
         {
             return prefix(r) ^ prefix(l - 1);
         }
-        static constexpr int popcnt(T x) noexcept
+        static constexpr int popcnt(uint64_t x) noexcept
         {
             // return _mm_popcnt_u64(x);
             return __builtin_popcountll(x);
         }
-        static constexpr int clz(T x) noexcept
+        static constexpr int clz(uint64_t x) noexcept
         {
             return __builtin_clzll(x);
         }
-        static constexpr int ctz(T x) noexcept
+        static constexpr int ctz(uint64_t x) noexcept
         {
             return __builtin_ctzll(x);
         }
@@ -100,13 +100,13 @@ namespace dybi
         }
 
         int n, m;
-        mutable std::vector<T> b;
+        mutable std::vector<uint64_t> b;
         mutable int pending_shift;           //positive => left shift, negative => right shift
 
         // helper functions
 
         // returns a submask of a single block 
-        inline T submask(int l, int r) const noexcept
+        inline uint64_t submask(int l, int r) const noexcept
         {
             int bx = block_id(l);
             assert(bx == block_id(r));
@@ -119,7 +119,7 @@ namespace dybi
         }
 
         lazy_dynamic_bitset (int n) : lazy_dynamic_bitset(n, false) {};
-        lazy_dynamic_bitset(int n, bool init) : n(n), m((n + B - 1)/B), b(m, init ? ~T(0) : T(0)), pending_shift(0) 
+        lazy_dynamic_bitset(int n, bool init) : n(n), m((n + B - 1)/B), b(m, init ? ~uint64_t(0) : uint64_t(0)), pending_shift(0) 
         {
             trim();
         };
@@ -130,9 +130,9 @@ namespace dybi
             assert(0 <= i and i < n);
             resolve_shift();
             if(val)
-                b[i/B] |= (T(1) << (i % B));
+                b[i/B] |= (uint64_t(1) << (i % B));
             else
-                b[i/B] &= ~(T(1) << (i % B));
+                b[i/B] &= ~(uint64_t(1) << (i % B));
         }
 
         // get the value of the i-th bit
@@ -140,13 +140,13 @@ namespace dybi
         {
             assert(0 <= i and i < n);
             resolve_shift();
-            return (b[i/B] & (T(1) << (i % B))) != 0;
+            return (b[i/B] & (uint64_t(1) << (i % B))) != 0;
         }
 
         // reset the bitset
         void reset() noexcept
         {
-            std::fill(b.begin(), b.end(), T(0));
+            std::fill(b.begin(), b.end(), uint64_t(0));
         }
 
         // bitwise operations
@@ -163,7 +163,7 @@ namespace dybi
             for(int i = 0; i < std::min(m, other.m); i ++)
                 b[i] &= other.b[i];
             if(m > other.m)
-                std::fill(b.begin() + other.m, b.begin() + m, T(0));
+                std::fill(b.begin() + other.m, b.begin() + m, uint64_t(0));
             // trim(); there's no need to trim here, as no extra bits are switched on in our own overhang
         }
 
@@ -218,7 +218,7 @@ namespace dybi
                 b[s] = b[0];
             }
     
-            std::fill(b.begin(), b.begin() + s, T(0));
+            std::fill(b.begin(), b.begin() + s, uint64_t(0));
     
             trim();
         }
@@ -248,7 +248,7 @@ namespace dybi
                     b[i - s] = b[i];
             }
     
-            std::fill(b.begin() + m - s, b.end(), T(0));        
+            std::fill(b.begin() + m - s, b.end(), uint64_t(0));        
     
             // trim();
         }
@@ -346,7 +346,7 @@ namespace dybi
         {
             resolve_shift();
             lazy_dynamic_bitset result(*this);
-            for(auto &v : result)
+            for(auto &v : result.b)
                 v = ~v;
             result.trim();
             return result;
@@ -358,7 +358,7 @@ namespace dybi
         int count() const noexcept
         {
             resolve_shift();
-            return std::accumulate(b.begin(), b.end(), 0, [](int sum, T value) { return sum + popcnt(value); });
+            return std::accumulate(b.begin(), b.end(), 0, [](int sum, uint64_t value) { return sum + popcnt(value); });
         }
         
         // returns the index of the first set bit (-1 if none)
@@ -369,7 +369,7 @@ namespace dybi
 
             for(int bi = 0; bi < m; bi ++)
             {
-                if(b[bi] == T(0))
+                if(b[bi] == uint64_t(0))
                     continue;
                 
                 pos = ctz(b[bi]) + bi * B;
@@ -387,7 +387,7 @@ namespace dybi
 
             for(int bi = m - 1; bi >= 0; bi --)
             {
-                if(b[bi] == T(0))
+                if(b[bi] == uint64_t(0))
                     continue;
                 
                 pos = B - clz(b[bi]) - 1 + bi * B;
@@ -428,7 +428,7 @@ namespace dybi
             auto block_brute = [&](int l, int r) -> void
             {
                 int bi = block_id(l);
-                T mask = range(l - bi * B + 1, r - bi * B + 1);
+                uint64_t mask = range(l - bi * B + 1, r - bi * B + 1);
                 if(val)
                     b[bi] |= mask;
                 else
@@ -436,7 +436,7 @@ namespace dybi
             };
             auto block_quick = [&](int bi) -> void
             {
-                b[bi] = (val ? ~T(0) : T(0));
+                b[bi] = (val ? ~uint64_t(0) : uint64_t(0));
             };
             range_process(l, r, block_brute, block_quick);
         }
@@ -469,7 +469,7 @@ namespace dybi
             };
             auto block_quick = [&](int bi) -> void
             {
-                if(b[bi] == T(0) or pos != -1)
+                if(b[bi] == uint64_t(0) or pos != -1)
                     return;
     
                 pos = ctz(b[bi]) + bi * B;
@@ -491,7 +491,7 @@ namespace dybi
             };
             auto block_quick = [&](int bi) -> void
             {
-                if(b[bi] == T(0))
+                if(b[bi] == uint64_t(0))
                     return;
     
                 pos = B - clz(b[bi]) - 1 + bi * B;

@@ -4,7 +4,7 @@
 This library provides two bitset implementations (`dybi::dynamic_bitset` and `dybi::lazy_dynamic_bitset`) that offer the following benefits over `std::bitset`:
 
 - Dynamic size (the ability to resize and a relaxation of the constraint that forces you to declare the size of the bitset of compile time).
-- More (accessible) functionality. You can perform arbitrary range queries with greater ease. You are also given the ability to use different block sizes (the bitwidth of masks used in the underlying array that represents the bitset). 64 bit integers perform best in most conditions.
+- More (accessible) functionality. You can perform arbitrary range queries with greater ease.
 - Better performance, particularly so when utilizing the lazy variant in shift heavy workloads. There is a noticeable (albeit unremarkable) improvement in general performance when benchmarked artificially (shown below), but the difference seems to be more noticeable in real-world use (I just realized that I referred to codeforces problems as "real-world use" O_O). 
 
 ## Usage
@@ -15,8 +15,8 @@ This library provides two bitset implementations (`dybi::dynamic_bitset` and `dy
 #include "dynamic_bitset.hpp"
 #include "lazy_dynamic_bitset.hpp"
 
-using dbitset = dybi::dynamic_bitset<uint64_t, 64>;
-using dbitset_lazy = dybi::dynamimc_bitset<uint64_t, 64>;
+using dbitset = dybi::dynamic_bitset;
+using dbitset_lazy = dybi::lazy_dynamic_bitset;
 
 int main()
 {

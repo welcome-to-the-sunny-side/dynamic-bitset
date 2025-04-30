@@ -3,8 +3,8 @@
 #include "dynamic_bitset.hpp"
 #include "lazy_dynamic_bitset.hpp"
 
-using dbitset = dybi::dynamic_bitset<uint64_t, 64>;
-
+using dbitset = dybi::dynamic_bitset;
+using ldbitset = dybi::lazy_dynamic_bitset;
 int rng(int n = 1000000007)
 {
     static std::mt19937 mt(std::random_device{}());
