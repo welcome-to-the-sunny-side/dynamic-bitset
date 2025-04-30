@@ -10,6 +10,8 @@ This library provides two bitset implementations (`dybi::dynamic_bitset` and `dy
 ## Usage
 
 ```cpp
+#pragma GCC optimize("O3,unroll-loops")
+
 #include <iostream>
 #include <random>
 #include "dynamic_bitset.hpp"
