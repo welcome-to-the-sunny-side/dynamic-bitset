@@ -8,7 +8,9 @@ message(STATUS "Using CXX compiler: ${CMAKE_CXX_COMPILER}")
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_compile_options(-O3 -march=native -funroll-loops)
+# add_compile_options(-O3 -march=native -funroll-loops)
+# add_compile_options(-O0)
+add_compile_options(-O3 -march=native)
 
 # if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 #     add_compile_options(-fopt-info-vec-all)
